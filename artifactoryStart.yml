@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  sudo: yes
+  tasks:
+ # Taking Backup of old files to a temporary location
+  - name: artifactory stop
+    script: /home/devops/Scripts/check-start.sh
+

@@ -1,0 +1,89 @@
+---
+- hosts: localhost
+  become: yes
+  
+  vars:
+    # This Variable will contains the Artifactory Version Details
+    artifactory_version: "{{ version }}"
+
+    # This Variable will used to store the Artifactory Version
+    artifactory_dir: /opt/artifactory_install
+
+    # This Variable will be used as Backup Directory Path
+    artifactory_backup: /opt/artifactory_install/backup
+
+    # This Variable is to access the path of the New Artifactory Version Folder
+    artifactory_path: /opt/artifactory_install/{{ artifactory_version }}
+    
+    # This Variable is used for the Zip File location/Path
+    artifactory_zip_file: /home/devops/jfrog-{{ artifactory_version }}.zip
+  
+  tasks: 
+  # Stop the Artifactory service if it exists
+  - name: Artifactory service stopped
+    service: name=artifactory state=stopped
+
+  # Stop the apache service
+  - name: Httpd Service Stopped
+    service: name=httpd state=stopped
+  
+  # Taking the Backup of the old files before upgrading to a temporary location
+  - name: artifactory | Backup old files to a temporary location
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+    with_items:
+     - { src: '/opt/artifactory/tomcat/conf/server.xml', dest: '{{ artifactory_backup }}' }
+     - { src: '/opt/artifactory/bin/artifactory.default', dest: '{{ artifactory_backup }}' }
+     - { src: '/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar', dest: '{{ artifactory_backup }}' }
+ 
+ # artifactory | Delete the Artifactory Directory
+  - shell: /bin/rm -rf /opt/artifactory/webapps/*
+
+  - shell: /bin/rm -rf /opt/artifactory/tomcat
+
+  - shell: /bin/rm -rf /opt/artifactory/bin
+
+  - shell: /bin/rm -rf /opt/artifactory/misc
+
+  # Extract the Zip file
+  - name: artifactory | Extract the Upgraded artifactory
+    unarchive:
+       src: "{{ artifactory_zip_file }}"
+       dest: "{{ artifactory_dir }}"
+  
+  # Change the Permission for the Directory 
+  - name: artifactory | Change the files permission of the Intallation files
+    file: dest={{ artifactory_path }} owner=artifactory group=artifactory recurse=yes
+
+  # Replace the removed files and folders with the corresponding ones from the new unzipped version
+  - name: artifactory | Replace the Removed files with the new ones
+    shell: cp -R -p {{ artifactory_path }}/misc /opt/artifactory
+
+  - shell: cp -R -p {{ artifactory_path }}/bin /opt/artifactory
+
+  - shell: cp -R -p {{ artifactory_path }}/tomcat /opt/artifactory
+
+  - shell: cp -R {{ artifactory_path }}/webapps/* /opt/artifactory/webapps/
+
+  # Copy back custom config files
+  - name: artifactory | Copy all the configurations files back
+    copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+    with_items:
+    - { src: '{{ artifactory_backup }}/server.xml', dest: '/opt/artifactory/tomcat/conf/' }
+    - { src: '{{ artifactory_backup }}/artifactory.default', dest: '/opt/artifactory/bin/' }
+    - { src: '{{ artifactory_backup }}/mysql-connector-java-5.1.46.jar', dest: '/opt/artifactory/tomcat/lib/' }
+
+  # Install the Service
+  - name: artifactory| Install service
+    script: /opt/artifactory/bin/installService.sh
+
+  # Start the Service
+  - name: artifactory | Start Artifactory
+    service: name=artifactory state=started
+
+  - name: artifactory | Start Httpd Service
+    service: name=httpd state=started
+

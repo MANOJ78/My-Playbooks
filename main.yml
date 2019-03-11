@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  sudo: yes
+  tasks:
+#Installs artifactory
+# tasks file for /etc/ansible/roles/artifactory
+#Stop the running service first
+  - include: artifactoryStop.yml
+#Uninstalls artifactory
+  - include: artifactoryUninstall.yml
+#Taking Backup of Old Files
+  - include: artifactoryBackup.yml
+#Download the Artifactory
+  - include: artifactoryDownload
+#Replace the Files
+  - include: artifactoryReplace.yml
+#Installs artifactory
+  - include: artifactoryInstall.yml
+#Restart the stopped service
+  - include: artifactoryRestart.yml

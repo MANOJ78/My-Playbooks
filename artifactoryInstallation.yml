@@ -1,0 +1,50 @@
+---  
+# Download the upgraded version Zip file
+- name: artifactory | Download artifactory zip
+  get_url: url={{ artifactory_zip_url }} dest=/opt/{{ artifactory_zip_file }}
+
+# Extract the Zip file
+- name: artifactory | Extract artifactory
+  shell: unzip /opt/artifactory_install/{{ artifactory_zip_file }} -d /opt  creates={{ artifactory_dir }}
+
+# Go to the Installed Directory
+- name: artifactory | Getting in to installation directory
+  shell: cd /opt/artifactory_install/artifactory-pro-6.1.0
+
+# Change the Permission for the Directory
+- name: artifactory | Change the files permission of the Intallation files
+  file: path=/opt/artifactory_install/artifactory-pro-6.1.0 mode=0775 state=directory recurse=yes
+
+# Replace the removed files and folders with the corresponding ones from the new unzipped version
+
+- name: artifactory | Replace the Removed files with the new ones
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'misc', dest: '/opt/artifactory' }
+    - { src: 'bin', dest: '/opt/artifactory' }
+    - { src: 'tomcat', dest: '/opt/artifactory' }
+    - { src: 'webapps/*', dest: '/opt/artifactory/webapps/' }
+
+# Copy back custom config files
+- name: Going Back to the Backup folder
+  shell: cd /opt/artifactory_install/backup
+
+- name: artifactory | copy all the configurations files back
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: 'server.xml', dest: '/opt/artifactory/tomcat/conf/' }
+    - { src: 'artifactory.default', dest: '/opt/artifactory/bin/' }
+    - { src: 'mysql-connector-java-5.1.46.jar', dest: '/opt/artifactory/tomcat/lib/' }
+  
+# Install the Service 
+- name: artifactory | Getting in to installation directory
+  shell: cd /opt/artifactory_install/artifactory-pro-6.1.0
+  
+- name: artifactory| Install service
+  shell: bash /opt/artifactory_install/artifactory-pro-6.1.0/bin/installService.sh
+
+# Starting the Service
+- name: artifactory | Start/Restart artifactory
+  service: name=artifactory state=started
+  
+  notify: Restart the Apache Service  

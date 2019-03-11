@@ -1,0 +1,22 @@
+---
+# Replace the removed files and folders with the corresponding ones from the new unzipped version
+- name: Replace the Removed files with the new ones
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+  - { src: 'misc', dest: '/opt/artifactory' }
+  - { src: 'bin', dest: '/opt/artifactory' }
+  - { src: 'tomcat', dest: '/opt/artifactory' }
+  - { src: 'webapps/*', dest: '/opt/artifactory/webapps/' }
+
+# Copy back custom config Files
+- name: Going Back to the Backup folder
+  shell: cd /opt/artifactory_install/backup
+
+# Copy the Configurations Files
+- name: Copy all the configurations files back
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+  - { src: 'server.xml', dest: '/opt/artifactory/tomcat/conf/' }
+  - { src: 'artifactory.default', dest: '/opt/artifactory/bin/' }
+  - { src: 'mysql-connector-java-5.1.46.jar', dest: '/opt/artifactory/tomcat/lib/' }
+

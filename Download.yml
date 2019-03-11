@@ -1,0 +1,35 @@
+---
+- hosts: localhost
+  become: yes
+
+  vars:
+    artifactory_version: "{{ version }}"
+    artifactory_dir: /opt/artifactory_install
+    artifactory_backup: /opt/artifactory_install/backup
+    artifactory_path: /opt/artifactory_install/{{ artifactory_version }}
+    artifactory_zip_file: /home/devops/jfrog-{{ artifactory_version }}.zip
+
+  tasks:
+  # Taking the Backup of the old files before upgrading to a temporary location
+  - name: artifactory | Backup old files to a temporary location
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+    with_items:
+     - { src: '/opt/artifactory/tomcat/conf/server.xml', dest: '{{ artifactory_backup }}' }
+     - { src: '/opt/artifactory/bin/artifactory.default', dest: '{{ artifactory_backup }}' }
+     - { src: '/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar', dest: '{{ artifactory_backup }}' }
+
+  # Extract the Zip file
+  - name: artifactory | Extract the Upgraded artifactory
+    unarchive:
+       src: "{{ artifactory_zip_file }}"
+       dest: "{{ artifactory_dir }}"
+
+  # Change the Permission for the Directory
+  - name: artifactory | Change the files permission of the Intallation files
+    file: dest={{ artifactory_path }} owner=artifactory group=artifactory recurse=yes
+
+  - name: artifactory | Replace the Removed files with the new ones
+    shell: cp -R -p {{ artifactory_path }}/misc /home/devops/
+

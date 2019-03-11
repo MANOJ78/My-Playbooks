@@ -1,0 +1,5 @@
+---
+- hosts: localhost
+  sudo: yes
+  tasks: 
+  - shell: /bin/rm -rf /home/devops/Lohi/*

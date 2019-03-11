@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  become: yes
+  tasks:
+
+  - file: state=absent path={{ item.src }}
+    with_items:
+      - { src: '/home/devops/Lohi' }

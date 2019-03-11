@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  become: yes
+  vars:
+    empty_dir:
+      -"/home/devops/Lohi"
+  tasks:
+# Delete the old files after taking Backup
+  - file: state=absent path={{ item }}
+    with_items: empty_dir
+
+  - file: state=directory path={{ item }}
+    with_items: empty_dir
+

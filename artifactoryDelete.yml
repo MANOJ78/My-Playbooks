@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  sudo: yes
+  tasks:
+# Delete the old files after taking Backup
+  - name: artifactory | Delete the Artifactory Directory
+    file:
+      path: "{{ item.src }}"
+      state: absent
+    with_items:
+     - { src: '/' }
+     - { src: '/' }
+     - { src: '/' }

@@ -1,0 +1,521 @@
+- name: Clone, Build and Deploy
+  hosts: Production
+  become: yes
+  become_method: sudo
+  vars:
+     remote_warfile: /root/workspace/myproject/target/myproject.war
+     remote_webapps: /usr/share/tomcat/webapps/
+     local_git_credential: gitcredential/.git-credentials
+     remote_git_credential: ~/.git-credentials
+
+  tasks:
+    - name: tomcat stop
+      service: name=tomcat state=stopped
+
+    - name: copy git .git-credentials
+      copy: src={{ local_git_credential }} dest={{ remote_git_credential }}
+
+    - name: check out the repository on the host
+      git: repo=https://gitlab.com/loongest/myproject.git dest=/root/workspace/myproject/ accept_hostkey=yes
+
+    - name: maven clean package
+      command: mvn -f /root/workspace/myproject/pom.xml clean package
+
+    - name: delete war directories in tomcat webapps
+      file: path=/usr/share/tomcat/webapps/myproject.war state=absent
+
+    - name: delete war file in tomcat webapps
+      file: path=/usr/share/tomcat/webapps/myproject state=absent
+
+    - name: delete git credential file
+      file: path={{ remote_git_credential }} state=absent
+
+    - name: copy war file
+      command: cp {{remote_warfile}} {{remote_webapps}}
+      notify: start tomcat
+
+  handlers:
+    - name: start tomcat
+      service: name=tomcat state=started
+	  
+	  
+Successful Playbook
+
+For JDK:
+---
+- hosts: webservers
+  become: true
+  vars:
+   download_url: http://download.oracle.com/otn-pub/java/jdk/8u171-b11/512cd62ec5174c3487ac17c61aaa89e8/jdk-8u171-linux-x64.rpm
+  
+  tasks:
+  - name: Download JDK 8 RPM file
+    command: "wget --no-check-certificate --no-cookies --header 'Cookie: oraclelicense=accept-securebackup-cookie' {{download_url}} "
+  - name: Install JDK 8
+    command: "rpm -ivh jdk-8u171-linux-x64.rpm"
+	
+
+
+For Maven:
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: Download Maven
+    get_url: url=http://www-us.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz dest=/opt/niranjan/apache-maven-3.5.3-bin.tar.gz
+  - name: Extract Maven
+    command: tar xvf /opt/niranjan/apache-maven-3.5.3-bin.tar.gz -C /opt/niranjan
+  - name: Move to a smaller directory
+    command: mv /opt/niranjan/apache-maven-3.5.3 /opt/niranjan/maven
+  - name: Update Profile
+    copy: content="export M2_HOME=/opt/niranjan/maven \n" dest=/etc/profile.d/maven.sh
+  # lineinfile is used to add additional or append lines to existing files.
+  - lineinfile:
+     path: /etc/profile.d/maven.sh
+  line: 'export PATH=${M2_HOME}/bin:${PATH}'
+  - name: Source profile
+    shell: source /etc/profile.d/maven.sh
+	
+
+For Tomcat8:
+---
+- hosts: webservers
+  become: true
+  gather_facts: no
+  tasks:
+  - name: Download Tomcat
+    get_url: url=http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.32/bin/apache-tomcat-8.5.32.tar.gz dest=/home/ansible
+
+  - name: Extract the file downloaded tomcat file
+    command: tar xvf apache-tomcat-8.5.32.tar.gz
+ 
+  - name: Move the Tomcat directory to a smaller one
+    command: mv apache-tomcat-8.5.32 tomcat
+  
+  - name: Change Ownership and group of the Tomcat directory
+    file: path=/home/ansible/tomcat owner=ansible group=ansible mode=775 state=directory recurse=yes
+ 
+  - name: Start Tomcat
+    command: nohup /home/ansible/tomcat/bin/startup.sh # Execute command even after you have exited from the shell prompt
+    become: true
+    become_user: ansible
+	
+	
+This playbook displays the date.
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: Date and Time Example in Ansible
+    debug:
+     var=ansible_date_time.date
+
+This playbook displays the time.
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: Date and Time Example in Ansible
+  debug:
+   var=ansible_date_time.time
+   
+- hosts: all
+  tasks:
+  - name: Ansible timestamp filename example
+    command: touch niranjan{{ansible_date_time.date}}.log
+The above playbook will create a dynamic file based on the current date 
+
+
+Playbook to install vim editor and GIT on the target servers or machines.
+
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: Install Package
+    yum: name=vim,git state=latest
+	
+Cloning the Repository
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: check out the repository on the host
+    git: repo=https://gitlab.com/loongest/myproject.git dest=/root/workspace/myproject/ accept_hostkey=yes
+
+Install Apache server. Save the below code and run playbook as shown below.
+
+---
+- hosts: webservers
+  become: true
+  tasks:
+  - name: Install Package
+    yum: name=httpd state=present
+  - name: Start httpd service
+    service: name=httpd state=started
+
+
+pre_tasks, post_tasks, and tags:
+
+You can use pre_tasks and post_tasks to run certain tasks before or after running the main task.
+
+Normally in a playbook, you have so many tasks that are executed. What if you need to execute only a certain task? Tags are the answer to it. Let’s look at the below option which has all the 3 options. It has 2 tasks i.e. one with a TAG and one without a TAG.
+
+---
+- name: Pre , Post tasks and Tags example
+  hosts: localhost
+  become: true
+  tags:
+     - niranjan
+  pre_tasks:
+  - debug: msg="Started task with tag - niranjan.
+  tasks:
+   - name: Going to execute the main task
+     debug: msg="Currently in the target server"
+  post_tasks:
+  - debug: msg="Completed task with tag - niranjan.
+  - name: Play without tags
+    hosts: localhost
+    become: true
+    tasks:
+    - name: Command to list files
+      shell: ls -lrt > niranjan.txt
+	  
+
+Playbook to create the EC2 instances
+
+How to create an EC2 instance along with creating a security group and key pair.
+
+	1. Create a security group
+	2. Create key pair and the PEM file
+	3. Create EC2 instance
+	4. Save the EC2 instance IP address to the ansible inventory file
+
+I am assuming that the users doing this exercise are well versed with the AWS EC2 concepts.
+
+Add the below code to a file and run the same to verify the EC2 instance creation in the AWS console. 
+
+---
+- hosts: localhost
+  become: true
+  gather_facts: False
+
+vars:
+  region: ap-south-1
+  instance_type: t2.micro
+  ami: ami-5b673c34 # RedHat Linux 7.5
+  hosts_file: /etc/ansible/hosts
+
+tasks:
+ - name: Create security group
+ ec2_group:
+  aws_access_key: <access key>
+  aws_secret_key: <Secret key>
+  name: "vniranjan"
+  description: "V Niranjan Security Group"
+  region: "{{ region }}"
+  rules:
+    - proto: tcp
+      from_port: 22
+      to_port: 22
+      cidr_ip: 0.0.0.0/0
+
+- name: Create an EC2 key
+  ec2_key:
+   aws_access_key: <access key>
+   aws_secret_key: <Secret key>
+   name: "vniranjan"
+   region: "{{ region }}"
+  register: ec2_key
+- name: Save private key (PEM file)
+  copy: content="{{ec2_key.key.private_key}}" dest=/home/ansible/vniranjan.pem mode=0600
+  when: ec2_key.changed
+- name: Create an ec2 instance
+   ec2:
+    aws_access_key: <access key>
+    aws_secret_key: <secret key>
+    key_name: vniranjan
+    group: vniranjan # security group name
+    instance_type: "{{ instance_type}}"
+    image: "{{ ami }}"
+    wait: true
+    region: "{{ region }}"
+    count: 1 # default
+    count_tag:
+      Name: Demo
+    instance_tags:
+      Name: Demo
+  register: ec2
+- name: Save IP to inventory file
+  lineinfile:
+    dest: "{{hosts_file}}"
+    insertafter: '\[webservers\]'
+    line: "{{item.private_ip}}"
+  with_items: "{{ec2.instances}}"
+
+
+Playbook to terminate the EC2 instances
+
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  vars:
+   instance_ids:
+    - 'i-05945003313d20603' # Replace these with your EC2 instance id’s
+    - 'i-0ce5ce5820bddf610'
+
+  region: ap-south-1
+  keypair_name: vniranjan
+  securitygroup_name: vniranjan
+ tasks:
+ - name: Terminate EC2 instance
+   ec2:
+    aws_access_key: <access key>
+    aws_secret_key: <Secret key>
+    instance_ids: '{{instance_ids}}'
+    region: '{{region}}'
+    state: absent
+    wait: true
+
+- name: Remove EC2 Key
+  ec2_key:
+   aws_access_key: <access key>
+   aws_secret_key: <Secret key>
+   name: '{{keypair_name}}'
+   state: absent
+   region: '{{region}}'
+
+- name: Remove Security Group
+  ec2_group:
+   aws_access_key: <access key>
+   aws_secret_key: <Secret key>
+   name: '{{securitygroup_name}}'
+   state: absent
+   region: '{{region}}'
+   
+
+For Jenkins:
+
+TASKS:
+– INSTALL YUM: INSTALL WGET AND OPENJDK.
+
+– DOWNLOAD JENKINS.REPO: GET THE REPOSITORY OF YUM TO INSTALL JENKINS.
+
+– IMPORT JENKINS KEY: IMPORT JENKINS’ RPM KEY.
+
+– INSTALL JENKINS: INSTALL JENKINS.
+
+– START & ENABLE JENKINS: SET STARTUP AND AUTOMATIC STARTUP OF JENKINS.
+
+– SLEEP FOR 30 SECONDS AND CONTINUE WITH PLAY: WAIT 30 SECONDS FOR THE SERVICE TO START COMPLETELY.
+
+– GET INIT PASSWORD JENKINS: GET THE INITIAL PASSWORD RANDOMLY GENERATED BY JENKINS.
+
+– PRINT INIT PASSWORD JENKINS: DISPLAY THE INITIAL PASSWORD RANDOMLY GENERATED BY JENKINS.
+
+1.1.Create PlayBook
+# cat site.yml
+---
+- name: Install Jenkins
+  hosts: jenkins
+  gather_facts: false
+  become: true
+  tasks:
+  - import_role:
+      name: jenkins
+
+1.2.Create a role
+# cat roles/jenkins/tasks/main.yml
+---
+- name: install wget
+  yum:
+    name: wget
+    state: present
+
+- name: install openjdk
+  yum:
+    name: java-1.8.0-openjdk
+    state: present
+
+- name: download jenkins.repo
+  get_url:
+    url: http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+    dest: /etc/yum.repos.d/jenkins.repo
+
+- name: import jenkins key
+  rpm_key:
+    state: present
+    key: https://jenkins-ci.org/redhat/jenkins-ci.org.key
+
+- name: install jenkins
+  yum:
+    name: jenkins
+    state: present
+
+- name: start jenkins
+  systemd:
+    name: jenkins
+    state: started
+
+- name: enable jenkins
+  systemd:
+    name: jenkins
+    enabled: true
+
+- name: sleep for 30 seconds and continue with play
+  wait_for: timeout=30
+  delegate_to: localhost
+
+- name: init password jenkin
+  shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  register: result
+
+- name: print init password jenkins
+  debug:
+    var: result.stdout
+
+
+
+Alternative
+Jenkins Using Ansible:
+
+---
+- name: Install Jenkins Using Playbook
+  hosts: jenkins
+  gather_facts: false
+  become: true
+
+# Variable Section
+  vars:
+    jdk_version: oracle-java8-installer
+    proxy_env:
+        http_proxy: http://username:password@proxy.us.dell.com:80/
+        https_proxy: http://username:password@proxy.us.dell.com:80/
+
+# Tasks Section
+  tasks:
+  - name: Check if java is installed
+    command: java -version
+    register: java_result
+    ignore_errors: True
+
+  - debug:
+      msg: "Failed - Java is not installed"
+    when: java_result is failed
+
+  - debug:
+      msg: "Success - Java is already installed"
+    when:  java_result is success
+
+  - name: Fetch Java version
+    shell: java -version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+    register: java_version
+    when:  java_result is success
+
+  - debug:
+      msg: "Your current java version is :{{ java_version.stdout_lines }}"
+    when:  java_result is success
+
+  - name: Install Oracle Java
+    yum: pkg={{ jdk_version }} update-cache=yes state=latest
+    sudo: yes
+    when: java_result is failed
+	
+  - name: Check if git is installed
+    command: git --version
+    register: git_result
+    ignore_errors: True
+
+  - debug:
+      msg: "Failed - Git is not installed"
+    when: git_result is failed
+
+  - debug:
+      msg: "Success - Git is already installed"
+    when: git_result is success
+
+  - name: Fetch git version
+    shell: git --version 2>&1 | grep version | awk '{print $3}' | sed 's/"//g'
+    register: git_version
+    when: git_result is success
+
+  - debug:
+      msg: "Your current Git version is :{{ git_version.stdout_lines }}"
+    when: git_result is success
+
+  - name: Install git and its dependencies
+    yum: name=git state=installed
+    when: git_result is failed
+	
+  - name: install wget
+    yum:
+      name: wget
+      state: present
+
+  - name: Create user
+    user:
+      name: "deploy_user"
+      comment: "Used to deploy Django"
+    state: present
+	
+  - name: Setting Up the Proxy
+    yum: name=cobbler state=installed
+      environment: "{{proxy_env}}"
+	
+  - name: Clone CPG Bitbucket Repo
+    git:
+      repo: ssh://git@git.cpgswtools.com/bt/jenkins-setup.git
+      dest: /opt/jenkins_root
+      version: master
+      accept_hostkey: yes
+      key_file: ~/.ssh/id_rsa
+    become_user: root
+
+
+
+For cloning:
+	
+Setup SSH to work with Dell proxy
+
+Create a configuration file with vi editor, type in your command line session
+$ vi ~/.ssh/config
+Hit ALT + I to activate the insert mode, Then paste or type the flowing content
+ProxyCommand connect -H proxy.us.dell.com:80 %h %p
+#TDC Configuration
+#ProxyCommand connect -H proxy.tpe.apac.dell.com:80 %h %p
+Host git.cpgswtools.com
+StrictHostKeyChecking no
+IdentityFile ~/.ssh/id_eyzen
+IdentitiesOnly yes
+ServerAliveInterval 120
+ServerAliveCountMax 2
+
+To verify type
+$ cat ~/.ssh/config
+Test the configuration with this command
+$ ssh -v git.cpgswtools.com
+
+If error occurs, then install the connect-proxy using the below command and try again.
+
+apt-get install connect-proxy
+
+Installjenkins.yml
+
+  tasks:
+    - name: ensure the jenkins apt repository key is installed
+      apt_key: url=https://pkg.jenkins.io/debian-stable/jenkins.io.key state=present
+      become: yes
+
+    - name: ensure the repository is configured
+      apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
+      become: yes
+
+    - name: ensure jenkins is installed
+      apt: name=jenkins update_cache=yes
+      become: yes
+
+    - name: ensure jenkins is running
+      service: name=jenkins state=started
+

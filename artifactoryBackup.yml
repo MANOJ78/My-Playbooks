@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  sudo: yes
+# Taking the Backup of the old files before upgrading to a temporary location
+  tasks:
+  - name: Backup old files to a temporary location
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+    with_items:
+       - { src: '/opt/artifactory/tomcat/conf/server.xml', dest: '/opt/artifactory_install/backup/' }
+       - { src: '/opt/artifactory/bin/artifactory.default', dest: '/opt/artifactory_install/backup/' }
+       - { src: '/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar', dest: '/opt/artifactory_install/backup/' }
+

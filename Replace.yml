@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  sudo: yes
+  tasks: 
+  - name: Replace
+    copy:     
+       src: "{{ item.src }}"
+       dest: "{{ item.dest }}"
+    with_items:
+    - "{{ src: '/home/devops/Lohi', dest: '/home/devops/lohi' }}"
+
+

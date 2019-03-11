@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  sudo: yes
+#Restart the Artifactory Service
+# Starting the Service
+  - name: Start/Restart artifactory
+    service: name=artifactory state=started
+
+# Start/Restart Httpd
+  - name: Restart the Apache Service
+    service: name=httpd state=started
+

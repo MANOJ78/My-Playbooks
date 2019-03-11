@@ -1,0 +1,130 @@
+Starting log
+Reading the playbook... 
+
+PLAY [localhost] *******************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [localhost]
+
+TASK [artifactory | Backup old files to a temporary location] **********************************************************************
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/conf/server.xml'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/bin/artifactory.default'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar'})
+
+TASK [artifactory | Extract the Upgraded artifactory] ******************************************************************************
+changed: [localhost]
+
+TASK [artifactory | Change the files permission of the Intallation files] **********************************************************
+changed: [localhost]
+
+TASK [artifactory | Replace the Removed files with the new ones] *******************************************************************
+changed: [localhost]
+
+PLAY RECAP *************************************************************************************************************************
+localhost                  : ok=5    changed=3    unreachable=0    failed=0   
+
+OK
+Ending log
+Starting log
+Reading the playbook... 
+
+PLAY [localhost] *******************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [localhost]
+
+TASK [artifactory | Backup old files to a temporary location] **********************************************************************
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/conf/server.xml'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/bin/artifactory.default'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar'})
+
+TASK [artifactory | Extract the Upgraded artifactory] ******************************************************************************
+changed: [localhost]
+
+TASK [artifactory | Change the files permission of the Intallation files] **********************************************************
+changed: [localhost]
+
+TASK [artifactory | Replace the Removed files with the new ones] *******************************************************************
+changed: [localhost]
+
+PLAY RECAP *************************************************************************************************************************
+localhost                  : ok=5    changed=3    unreachable=0    failed=0   
+
+OK
+Ending log
+Starting log
+Reading the playbook... 
+
+PLAY [localhost] *******************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [localhost]
+
+TASK [artifactory | Backup old files to a temporary location] **********************************************************************
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/conf/server.xml'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/bin/artifactory.default'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar'})
+
+TASK [artifactory | Extract the Upgraded artifactory] ******************************************************************************
+changed: [localhost]
+
+TASK [artifactory | Change the files permission of the Intallation files] **********************************************************
+changed: [localhost]
+
+TASK [artifactory | Replace the Removed files with the new ones] *******************************************************************
+changed: [localhost]
+
+PLAY RECAP *************************************************************************************************************************
+localhost                  : ok=5    changed=3    unreachable=0    failed=0   
+
+OK
+Ending log
+Starting log
+Reading the playbook... 
+
+PLAY [localhost] *******************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [localhost]
+
+TASK [artifactory | Backup old files to a temporary location] **********************************************************************
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/conf/server.xml'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/bin/artifactory.default'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar'})
+
+TASK [artifactory | Extract the Upgraded artifactory] ******************************************************************************
+changed: [localhost]
+
+TASK [artifactory | Change the files permission of the Intallation files] **********************************************************
+changed: [localhost]
+
+TASK [artifactory | Replace the Removed files with the new ones] *******************************************************************
+changed: [localhost]
+
+PLAY RECAP *************************************************************************************************************************
+localhost                  : ok=5    changed=3    unreachable=0    failed=0   
+
+OK
+Ending log
+Starting log
+Reading the playbook... 
+
+PLAY [localhost] *******************************************************************************************************************
+
+TASK [Gathering Facts] *************************************************************************************************************
+ok: [localhost]
+
+TASK [artifactory | Backup old files to a temporary location] **********************************************************************
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/conf/server.xml'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/bin/artifactory.default'})
+ok: [localhost] => (item={u'dest': u'/opt/artifactory_install/backup', u'src': u'/opt/artifactory/tomcat/lib/mysql-connector-java-5.1.46.jar'})
+
+TASK [artifactory | Extract the Upgraded artifactory] ******************************************************************************
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Could not find or access '/home/devops/jfrog-55555.zip'"}
+	to retry, use: --limit @/home/devops/Playbooks/Download.retry
+
+PLAY RECAP *************************************************************************************************************************
+localhost                  : ok=2    changed=0    unreachable=0    failed=1   
+
+OK
+Ending log
